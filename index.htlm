@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyCode Pro - Mobile</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+    :root {
+        --primary: #0078d4;
+        --primary-hover: #005a9e;
+        --bg: #0d1117;
+        --card: #161b22;
+        --text: #c9d1d9;
+        --success: #238636;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .header {
+        padding: 12px;
+        text-align: center;
+        background: var(--card);
+        border-bottom: 1px solid #30363d;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    h1 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; color: #58a6ff; }
+
+    .controls {
+        padding: 10px;
+        display: flex;
+        gap: 8px;
+        background: var(--bg);
+    }
+
+    select, .btn-action {
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        border: 1px solid #30363d;
+        outline: none;
+        transition: 0.2s;
+    }
+
+    select { flex: 1; background: var(--card); color: white; }
+
+    .btn-run {
+        background: var(--success);
+        color: white;
+        font-weight: bold;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+    }
+
+    .btn-run:active { transform: scale(0.95); opacity: 0.8; }
+
+    .symbol-bar {
+        display: flex;
+        overflow-x: auto;
+        background: #0d1117;
+        padding: 8px;
+        gap: 6px;
+        border-bottom: 1px solid #30363d;
+    }
+
+    .sym-btn {
+        background: #21262d;
+        color: #58a6ff;
+        border: 1px solid #30363d;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+    }
+
+    #editor {
+        flex: 1;
+        width: 100%;
+        border: none;
+        background: #0d1117;
+        color: #e6edf3;
+        font-family: 'Fira Code', 'Courier New', monospace;
+        padding: 15px;
+        font-size: 16px;
+        resize: none;
+        outline: none;
+    }
+
+    #output {
+        height: 140px;
+        background: #010409;
+        color: #7ee787;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 13px;
+        overflow-y: auto;
+        border-top: 1px solid #30363d;
+        white-space: pre-wrap;
+    }
+</style>
+</head>
+<body>
+
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px;">
+        <h1 id="title">🚀 PolyCode Pro</h1>
+        <select id="ui-lang" onchange="changeUILanguage()" style="width: auto; padding: 5px; font-size: 12px; background: #333; color: white; border-radius: 4px;">
+            <option value="fr">🇫🇷 FR</option>
+            <option value="en">🇺🇸 EN</option>
+        </select>
+    </div>
+
+    <div class="controls">
+        <select id="language">
+            <option value="python">Python 3</option>
+            <option value="c">Langage C</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="octave">Octave / Scilab</option>
+        </select>
+        <button onclick="loadTemplate()" style="background: #555; color: white; border: none; border-radius: 6px; padding: 10px;">EXEMPLES</button>
+        <button onclick="downloadCode()" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 8px; padding: 10px; margin: 0 5px;">💾</button>
+        <button class="btn-run" onclick="runCode()">LANCER</button>
+    </div>
+
+    <div class="symbol-bar">
+        <button class="sym-btn" onclick="insert('    ')">TAB</button>
+        <button class="sym-btn" onclick="insert('(')">(</button>
+        <button class="sym-btn" onclick="insert(')')">)</button>
+        <button class="sym-btn" onclick="insert('{')">{</button>
+        <button class="sym-btn" onclick="insert('}')">}</button>
+        <button class="sym-btn" onclick="insert('[')">[</button>
+        <button class="sym-btn" onclick="insert(']')">]</button>
+        <button class="sym-btn" onclick="insert(';')">;</button>
+        <button class="sym-btn" onclick="insert(':')">:</button>
+        <button class="sym-btn" onclick="insert('&quot;')">"</button>
+        <button class="sym-btn" onclick="insert('=')">=</button>
+    </div>
+
+    <textarea id="editor" placeholder="Commence à coder ici..."></textarea>
+    <div id="output">Console prête...</div>
+
+    <script>
+        const editor = document.getElementById('editor');
+
+        function insert(symbol) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            editor.value = text.substring(0, start) + symbol + text.substring(end);
+            editor.focus();
+            editor.setSelectionRange(start + symbol.length, start + symbol.length);
+        }
+        
+        const translations = {
+            fr: {
+                title: "🚀 PolyCode Pro",
+                btnLaunch: "LANCER",
+                btnExample: "EXEMPLES",
+                consoleReady: "Console prête...",
+                executing: "⏳ Exécution...",
+                confirmTemplate: "Cela va remplacer ton code actuel par un modèle. Continuer ?",
+                placeholder: "Commence à coder ici..."
+            },
+            en: {
+                title: "🚀 PolyCode Pro",
+                btnLaunch: "RUN",
+                btnExample: "EXAMPLES",
+                consoleReady: "Console ready...",
+                executing: "⏳ Running...",
+                confirmTemplate: "This will replace your current code with a template. Continue?",
+                placeholder: "Start coding here..."
+            }
+        };
+
+        function changeUILanguage() {
+            const lang = document.getElementById('ui-lang').value;
+            const t = translations[lang];
+            document.getElementById('title').innerText = t.title;
+            document.querySelector('.btn-run').innerText = t.btnLaunch;
+            
+            const allButtons = document.querySelectorAll('button');
+            allButtons.forEach(btn => {
+                if(btn.getAttribute('onclick') === 'loadTemplate()') {
+                    btn.innerText = t.btnExample;
+                }
+            });
+
+            document.getElementById('editor').placeholder = t.placeholder;
+            document.getElementById('output').innerText = t.consoleReady;
+            localStorage.setItem('polycode_lang', lang);
+        }
+
+        async function runCode() {
+            const lang = document.getElementById('language').value;
+            const code = editor.value;
+            const out = document.getElementById('output');
+            const uiLang = document.getElementById('ui-lang').value;
+            
+            out.style.color = "#7ee787";
+            out.innerText = translations[uiLang].executing;
+
+            try {
+                const res = await fetch("https://emkc.org/api/v2/piston/execute", {
+                    method: "POST",
+                    body: JSON.stringify({ language: lang, version: "*", files: [{ content: code }] })
+                });
+                const data = await res.json();
+                const noOutputMsg = uiLang === 'fr' ? "Exécuté (sans sortie)" : "Executed (no output)";
+                out.innerText = data.run.output || noOutputMsg;
+                if(data.run.stderr) out.style.color = "#ff4444";
+            } catch (e) {
+                out.innerText = uiLang === 'fr' ? "Erreur de connexion." : "Connection error.";
+                out.style.color = "#ff4444";
+            }
+        }
+        
+        window.onload = () => {
+            const savedCode = localStorage.getItem('polycode_backup');
+            if (savedCode) editor.value = savedCode;
+            const savedLang = localStorage.getItem('polycode_lang');
+            if (savedLang) {
+                document.getElementById('ui-lang').value = savedLang;
+                changeUILanguage();
+            }
+        };
+
+        editor.oninput = () => {
+            localStorage.setItem('polycode_backup', editor.value);
+        };
+
+        function loadTemplate() {
+            const lang = document.getElementById('language').value;
+            const templates = {
+                'python': 'print("Bonjour le monde !")\n# Écris ton code ici',
+                'c': '#include <stdio.h>\n\nint main() {\n    printf("Bonjour en C !\\n");\n    return 0;\n}',
+                'java': 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Bonjour en Java !");\n    }\n}',
+                'cpp': '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Bonjour en C++ !" << endl;\n    return 0;\n}',
+                'octave': 'A = [1, 2; 3, 4];\ndisp(A);'
+            };
+            
+            const uiLang = document.getElementById('ui-lang').value;
+            if(confirm(translations[uiLang].confirmTemplate)) {
+                editor.value = templates[lang];
+                localStorage.setItem('polycode_backup', editor.value);
+            }
+        }
+
+        function downloadCode() {
+            const code = editor.value;
+            const lang = document.getElementById('language').value;
+            const extensions = { 'python': 'py', 'c': 'c', 'java': 'java', 'cpp': 'cpp' };
+            const ext = extensions[lang] || 'txt';
+            const blob = new Blob([code], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `mon_code.${ext}`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
